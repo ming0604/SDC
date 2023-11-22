@@ -137,7 +137,7 @@ class Fusion:
         measurement = np.array([gps_x, gps_y])
         
         if not self.initial:
-            self.initial = ExtendedKalmanFilter(gps_x, gps_y)
+            self.EKF = ExtendedKalmanFilter(gps_x, gps_y)
             self.initial = True
         else:
             # Update error covriance
