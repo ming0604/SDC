@@ -22,6 +22,8 @@
 #include <nav_msgs/Path.h>
 
 using namespace std;
+
+
 class Localizer
 {
 private:
@@ -48,10 +50,10 @@ private:
     float gps_x;
     float gps_y;
     float gps_yaw;
-    float last_gps_x;
-    float last_gps_y;
-    float last_gps_yaw;
-    float distance, delta_angle;
+    float last_pose_x;
+    float last_pose_y;
+    float last_pose_yaw;
+    float distance_gps_icp, delta_angle;
 
     int seq = 0;
     int max_iter;
@@ -60,7 +62,7 @@ private:
     float correspond;
 
     Eigen::Matrix4f init_guess;
-
+    Eigen::Matrix4f last_init_guess;
     bool map_ready = false;
     bool gps_ready = false;
     bool initialized = false;
@@ -118,13 +120,13 @@ public:
             gps_ready = true;
         }
         else
-        {
-            distance = sqrt(pow(gps_x-pose_x, 2) + pow(gps_y-pose_y, 2));
+        {   
+            distance_gps_icp = sqrt(pow(gps_x-pose_x, 2) + pow(gps_y-pose_y, 2));
             delta_angle = abs(gps_yaw - pose_yaw );
-            if(distance > 5 || delta_angle > M_PI/2)
+            if(distance_gps_icp > 8 || delta_angle > M_PI/2)
             {
-                pose_x = gps_x;
-                pose_y = gps_y;
+                pose_x = 0.8*gps_x+0.2*pose_x;
+                pose_y = 0.8*gps_y+0.2*pose_y;
                 pose_yaw = gps_yaw;
                 initialized = false;
                 cout << "icp_bad! use gps correct" << endl;
@@ -162,82 +164,28 @@ public:
             initialized = true;
         }
 
-
-        //transform the radar points from the body to the map frame
-        pcl::PointCloud<pcl::PointXYZI>::Ptr radar_pc_map_frame(new pcl::PointCloud<pcl::PointXYZI>);
-        pcl::transformPointCloud(*radar_pc,*radar_pc_map_frame,init_guess);
-
         /*TODO : Implenment any scan matching base on initial guess, ICP, NDT, etc. */
-        bool good_results = false;
-        float MaxCorrespondenceDistance = 5;
-        Eigen::Matrix4f initial_to_aligned;
-        Eigen::Matrix4f aligned_to_initial;
-        while (!good_results)
-        {   
-            if(MaxCorrespondenceDistance==0)
-            {   
-                break;
-            }
-            // Create an ICP object
-            pcl::IterativeClosestPoint<pcl::PointXYZI, pcl::PointXYZI> icp;
-            /*
-            double max_correspondence_distance = icp.getMaxCorrespondenceDistance();
-            int max_iterations = icp.getMaximumIterations();
-            double Epsilon = icp.getTransformationEpsilon();
-            cout << "Epsilon:" << Epsilon << endl;
-            */
-            //icp.setTransformationEpsilon (1e-8);
-            icp.setMaximumIterations(5);
-            icp.setMaxCorrespondenceDistance(MaxCorrespondenceDistance);
+     
+        // Create an ICP object
+        pcl::IterativeClosestPoint<pcl::PointXYZI, pcl::PointXYZI> icp;
+        icp.setMaxCorrespondenceDistance (2.5);
+        icp.setMaximumIterations (100);
+        icp.setTransformationEpsilon (1e-5);
+        icp.setEuclideanFitnessEpsilon(1e-5);
+        //set source pc as radar point cloud, and target pc as map point cloud
+        icp.setInputSource(radar_pc);
+        icp.setInputTarget(map_pc);
 
-            //ser source pc as radar point cloud, and target pc as map point cloud
-            icp.setInputSource(radar_pc_map_frame);
-            icp.setInputTarget(map_pc);
-
-            //run the ICP, then get the transformation matrix after icp alignment which transform oringin pose frame to refined pose frame
-            icp.align(*output_pc);
-
-            if(icp.hasConverged())
-            {
-                cout << " icp score: " << icp.getFitnessScore() << endl;
-
-                initial_to_aligned = icp.getFinalTransformation();
-                aligned_to_initial = initial_to_aligned.inverse();
-
-                float x_change, y_change, yaw_change;
-                x_change = aligned_to_initial(0,3);
-                y_change = aligned_to_initial(1,3);
-                yaw_change = atan2(aligned_to_initial(1, 0), aligned_to_initial(0, 0));
-
-                if(x_change<0 || abs(y_change)>8 ||(yaw_change)> M_PI/2)
-                {
-                    ROS_WARN("ICP got wrong result!");
-                    MaxCorrespondenceDistance -= 2.5;
-                }
-                else
-                {   
-                    /*TODO : Assign the result to pose_x, pose_y, pose_yaw */
-                    /*TODO : Use result as next time initial guess */
-                    init_guess = init_guess * aligned_to_initial;
-                    pose_x = init_guess(0, 3);
-                    pose_y = init_guess(1, 3);
-                    pose_yaw = atan2(init_guess(1, 0), init_guess(0, 0));    // yaw = atan2(sin(yaw),cos(yaw))
-                    good_results = true;
-                }
-            }
-
-        }
+        //run the ICP, then get the transformation matrix after icp as new base_link
+        icp.align(*output_pc, init_guess);
+        init_guess = icp.getFinalTransformation();
+        pose_x = init_guess(0, 3);
+        pose_y = init_guess(1, 3);
+        pose_yaw = atan2(init_guess(1, 0), init_guess(0, 0));    // yaw = atan2(sin(yaw),cos(yaw))
         
-        /*
-        distance = sqrt(pow(pose_x-gps_x, 2) + pow(pose_y-gps_y, 2));
-        delta_angle = abs(pose_yaw - gps_yaw);
-        cout << "distance: " << distance << endl;
-        cout << "delta angle: " << delta_angle << endl;
-        */
-
         tf_brocaster(pose_x, pose_y, pose_yaw);
         radar_pose_publisher(pose_x, pose_y, pose_yaw);
-
+       
         sensor_msgs::PointCloud2 radar_pc_msg;
         pcl::toROSMsg(*radar_pc, radar_pc_msg);
         radar_pc_msg.header.stamp = ros::Time::now();
@@ -302,6 +250,19 @@ public:
         init_guess(1, 0) = sin(yaw);
         init_guess(1, 1) = cos(yaw);
         init_guess(1, 3) = y;
+    }
+
+    Eigen::Matrix4f set_guess(float x, float y, float yaw)
+    {   
+        Eigen::Matrix4f matrix = Eigen::Matrix4f::Identity();
+        matrix(0, 0) = cos(yaw);
+        matrix(0, 1) = -sin(yaw);
+        matrix(0, 3) = x;
+
+        matrix(1, 0) = sin(yaw);
+        matrix(1, 1) = cos(yaw);
+        matrix(1, 3) = y;
+        return matrix;
     }
 };
 
