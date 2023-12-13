@@ -4,7 +4,7 @@
     <node pkg="rviz" type="rviz" name="display_result" output="screen" args="-d $(find localization)/config/localiztion.rviz" />
 
     <param name="map_path" type="string" value="$(find localization)/data/pcd_tiles_my_filtered_test/" />
-    <param name="save_path" type="string" value="$(find localization)/result/result2.csv" />
+    <param name="save_path" type="string" value="$(find localization)/result/result_2.csv" />
 
     <node pkg="localization" type="map_pub" name="map_punlisher" output="screen"/>
     <node pkg="localization" type="radar" name="radar_subscriber" output="screen"/>
