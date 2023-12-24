@@ -2,7 +2,7 @@ import os
 import json
 import shutil
 
-def combine_all_training(root_dir,output_dir):
+def combine_all_data(root_dir,output_dir):
     images_output_folder = os.path.join(output_dir, "images")
     labels_output_folder = os.path.join(output_dir, "labels")
     
@@ -35,13 +35,19 @@ def combine_all_training(root_dir,output_dir):
             shutil.copy(original_label_path, output_label_path)
 
 def main():
-    data_training_yolo_folder = os.path.join("./2023_final/data/mini_train_yolo")
-    whole_training_output_folder = os.path.join("./2023_final/data/whole_yolo_training")
-   
-    if not os.path.exists(whole_training_output_folder):
-        os.makedirs(whole_training_output_folder)
+    data_train_yolo_folder = os.path.join("./2023_final/data/mini_train_yolo")
+    whole_train_output_folder = os.path.join("./2023_final/data/whole_yolo_training")
 
-    combine_all_training(data_training_yolo_folder,whole_training_output_folder)
+    if not os.path.exists(whole_train_output_folder):
+        os.makedirs(whole_train_output_folder)
+
+    data_test_yolo_folder = os.path.join("./2023_final/data/mini_test_yolo")
+    whole_test_output_folder = os.path.join("./2023_final/data/whole_yolo_testing")
+    if not os.path.exists(whole_test_output_folder):
+        os.makedirs(whole_test_output_folder)
+
+    #combine_all_data(data_train_yolo_folder,whole_train_output_folder)
+    combine_all_data(data_test_yolo_folder,whole_test_output_folder)
     
 if __name__ == "__main__":
     main()
