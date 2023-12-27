@@ -1,6 +1,31 @@
 import os
 import json
 import shutil
+import numpy as np
+
+def gen_boundingbox(bbox, angle):
+    theta = np.deg2rad(-angle)
+    R = np.array([[np.cos(theta), -np.sin(theta)],
+                    [np.sin(theta), np.cos(theta)]])
+    points = np.array([[bbox[0], bbox[1]],
+                        [bbox[0] + bbox[2], bbox[1]],
+                        [bbox[0] + bbox[2], bbox[1] + bbox[3]],
+                        [bbox[0], bbox[1] + bbox[3]]]).T
+
+    cx = bbox[0] + bbox[2] / 2
+    cy = bbox[1] + bbox[3] / 2
+    T = np.array([[cx], [cy]])
+
+    points = points - T
+    points = np.matmul(R, points) + T
+    points = points.astype(int)
+
+    min_x = np.min(points[0, :])
+    min_y = np.min(points[1, :])
+    max_x = np.max(points[0, :])
+    max_y = np.max(points[1, :])
+
+    return min_x, min_y, max_x, max_y
 
 def transform_to_yolo_txt(root_dir,output_dir):
     #folder of dataset
@@ -45,15 +70,12 @@ def transform_to_yolo_txt(root_dir,output_dir):
                             bbox = object["bboxes"][i]
 
                             if "position" in bbox:
-                                x_upper_left = bbox["position"][0]
-                                y_upper_left =  bbox["position"][1]
-                                bbox_width = bbox["position"][2]
-                                bbox_height = bbox["position"][3]
-
-                                x_c_yolo = (x_upper_left + bbox_width/2)/image_width
-                                y_c_yolo = (y_upper_left + bbox_height/2)/image_height
-                                width_yolo = bbox_width/image_width
-                                height_yolo = bbox_height/image_height
+                                min_x, min_y, max_x, max_y = gen_boundingbox(bbox['position'], bbox['rotation'])
+    
+                                x_c_yolo = ((min_x + max_x)/2)/image_width
+                                y_c_yolo = ((min_y + max_y)/2)/image_height
+                                width_yolo = (max_x - min_x)/image_width
+                                height_yolo = (max_y - min_y)/image_height
                                 yolo_txt = f"{0} {x_c_yolo} {y_c_yolo} {width_yolo} {height_yolo}"
 
                                 output.write(yolo_txt +'\n')
