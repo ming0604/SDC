@@ -1,6 +1,6 @@
-train: ./whole_yolo_training/images
-val: ./whole_yolo_training/images
-test: ./whole_yolo_testing/images
+train: C:\Users\b0981\Documents\碩班\碩一\Self-Driving Cars\SDC_HW\2023_final\data\whole_yolo_training\images
+val: C:\Users\b0981\Documents\碩班\碩一\Self-Driving Cars\SDC_HW\2023_final\data\whole_yolo_training\images
+test: C:\Users\b0981\Documents\碩班\碩一\Self-Driving Cars\SDC_HW\2023_final\data\whole_yolo_testing\images
 
-nc: 6
-names: ["car", "bus", "van", "truck", "pedestrian", "group_of_pedestrians"]
+nc: 1
+names: ["vehicle"]

@@ -22,8 +22,8 @@ def transform_to_yolo_txt(root_dir,output_dir):
             radar_images = os.listdir(radar_folder)
             radar_images.sort()
 
-            classes = ["car", "bus", "van", "truck", "pedestrian", "group_of_pedestrians"]
-            class_to_id = {class_name: index for index, class_name in enumerate(classes)}
+            #classes = ["car", "bus", "van", "truck", "pedestrian", "group_of_pedestrians"]
+            #class_to_id = {class_name: index for index, class_name in enumerate(classes)}
             image_width = 1152
             image_height = 1152
 
@@ -41,33 +41,38 @@ def transform_to_yolo_txt(root_dir,output_dir):
                 
                 with open(label_file_path, 'w') as output:
                     for object in annotation:
-                        id = class_to_id.get(object["class_name"])
-                        bbox = object["bboxes"][i]
+                        if (object["class_name"] != 'pedestrian' and object["class_name"] != 'group_of_pedestrians'):
+                            bbox = object["bboxes"][i]
 
-                        if "position" in bbox:
-                            x_upper_left = bbox["position"][0]
-                            y_upper_left =  bbox["position"][1]
-                            bbox_width = bbox["position"][2]
-                            bbox_height = bbox["position"][3]
+                            if "position" in bbox:
+                                x_upper_left = bbox["position"][0]
+                                y_upper_left =  bbox["position"][1]
+                                bbox_width = bbox["position"][2]
+                                bbox_height = bbox["position"][3]
 
-                            x_c_yolo = (x_upper_left + bbox_width/2)/image_width
-                            y_c_yolo = (y_upper_left + bbox_height/2)/image_height
-                            width_yolo = bbox_width/image_width
-                            height_yolo = bbox_height/image_height
-                            yolo_txt = f"{id} {x_c_yolo} {y_c_yolo} {width_yolo} {height_yolo}"
+                                x_c_yolo = (x_upper_left + bbox_width/2)/image_width
+                                y_c_yolo = (y_upper_left + bbox_height/2)/image_height
+                                width_yolo = bbox_width/image_width
+                                height_yolo = bbox_height/image_height
+                                yolo_txt = f"{0} {x_c_yolo} {y_c_yolo} {width_yolo} {height_yolo}"
 
-                            output.write(yolo_txt +'\n')
+                                output.write(yolo_txt +'\n')
                         
                         
 
 def main():
-    #data_train_folder = os.path.join("./2023_final/data/mini_train")
-    data_test_folder = os.path.join("./2023_final/data/mini_test")
-    
-    yolo_output_folder = os.path.join("./2023_final/data/mini_test_yolo")
-    if not os.path.exists(yolo_output_folder):
-        os.makedirs(yolo_output_folder)
-    transform_to_yolo_txt(data_test_folder,yolo_output_folder)
+    data_train_folder = os.path.join("../data/mini_train")
+    yolo_train_output_folder = os.path.join("../data/mini_train_yolo")
+    if not os.path.exists(yolo_train_output_folder):
+        os.makedirs(yolo_train_output_folder)
+
+    data_test_folder = os.path.join("../data/mini_test")
+    yolo_test_output_folder = os.path.join("../data/mini_test_yolo")
+    if not os.path.exists(yolo_test_output_folder):
+        os.makedirs(yolo_test_output_folder)
+
+    transform_to_yolo_txt(data_train_folder,yolo_train_output_folder)   
+    transform_to_yolo_txt(data_test_folder,yolo_test_output_folder)
     
 if __name__ == "__main__":
     main()

@@ -36,8 +36,8 @@ def draw_bounding_boxes(image_path, label_path):
     cv2.destroyAllWindows()
 
 def main():
-    yolo_images_path = "./2023_final/data/mini_train_yolo/city_1_3/images"
-    yolo_labels_path = "./2023_final/data/mini_train_yolo/city_1_3/labels" 
+    yolo_images_path = "../data/mini_train_yolo/city_1_3/images"
+    yolo_labels_path = "../data/mini_train_yolo/city_1_3/labels" 
 
     radar_images = os.listdir(yolo_images_path)
     labels = os.listdir(yolo_labels_path)

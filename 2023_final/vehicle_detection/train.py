@@ -1,7 +1,10 @@
 from ultralytics import YOLO
 
-# Load a model
-model = YOLO('yolov8x.yaml')  # build a model from YAML 
+def main():
+    # Load a model
+    model = YOLO('yolov8s.yaml')  # build a model from YAML 
+    # Train the model
+    model.train(data='data.yaml', epochs=1000, batch=-1, imgsz=480, device=0, amp=False)
 
-# Train the model
-model.train(data='data.yaml', epochs=1000, batch=-1, imgsz=640, device=[0, 1])
+if __name__ == '__main__':
+   main()
