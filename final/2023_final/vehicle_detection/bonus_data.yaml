@@ -1,0 +1,6 @@
+train: D:\sdc_final\2023_my_final\data\bonus_train\images
+val: D:\sdc_final\2023_my_final\data\bonus_train\images
+test: 
+
+nc: 1
+names: ["car"]

@@ -1,0 +1,6 @@
+train: D:\sdc_final\2023_my_final\data\whole_yolo_training\images
+val: D:\sdc_final\2023_my_final\data\whole_yolo_training\images
+test: D:\sdc_final\2023_my_final\data\whole_yolo_testing\images
+
+nc: 1
+names: ["car"]

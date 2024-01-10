@@ -1,6 +1,0 @@
-train: C:\Users\b0981\Documents\碩班\碩一\Self-Driving Cars\SDC_HW\2023_final\data\whole_yolo_training\images
-val: C:\Users\b0981\Documents\碩班\碩一\Self-Driving Cars\SDC_HW\2023_final\data\whole_yolo_training\images
-test: C:\Users\b0981\Documents\碩班\碩一\Self-Driving Cars\SDC_HW\2023_final\data\whole_yolo_testing\images
-
-nc: 1
-names: ["car"]
